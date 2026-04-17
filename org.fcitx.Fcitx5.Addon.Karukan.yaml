@@ -1,0 +1,44 @@
+app-id: org.fcitx.Fcitx5.Addon.Karukan
+branch: stable
+runtime: org.fcitx.Fcitx5
+runtime-version: stable
+sdk: org.kde.Sdk//6.10
+build-extension: true
+separate-locales: false
+build-options:
+  prefix: /app/addons/Karukan
+  prepend-path: /app/addons/Karukan/bin
+  prepend-pkg-config-path: /app/addons/Karukan/lib/pkgconfig
+  cflags: -I/app/addons/Karukan/include
+  no-debuginfo: true
+  strip: true
+
+cleanup:
+  - /bin
+  - /include
+  - /lib/pkgconfig
+  - "*.la"
+  - "*.a"
+
+modules:
+  - name: karukan-bin
+    buildsystem: simple
+    sources:
+      - type: archive
+        url: https://github.com/jijinbei/karukan/releases/download/v0.1.0-test/karukan-v0.1.0-test-x86_64-unknown-linux-gnu.tar.gz
+        sha256: 2d441c5063f049978fde71d6317b0d6e66dca038534c0005e850ab0e3c7abeb9
+        strip-components: 1
+    build-commands:
+      - install -Dm755 lib/libkarukan_im.so -t ${FLATPAK_DEST}/lib/
+
+  - name: fcitx5-karukan
+    buildsystem: cmake-ninja
+    sources:
+      - type: git
+        url: https://github.com/jijinbei/karukan
+        branch: ci/release-binaries
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DKARUKAN_RUST_LIB=/app/addons/Karukan/lib/libkarukan_im.so
+      - -DKARUKAN_SKIP_CARGO=ON
+    subdir: karukan-im/fcitx5-addon
